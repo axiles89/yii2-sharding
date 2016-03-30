@@ -1,0 +1,35 @@
+{
+  "name": "axiles89/yii2-sharding",
+  "description": "Yii2 sharding for Active Record",
+  "keywords": [
+    "php",
+    "yii2",
+    "sharding",
+    "coordinator",
+    "db"
+  ],
+  "type": "library",
+  "license": "Public Domain",
+  "authors": [
+    {
+      "name": "Kyshnerev",
+      "email": "DIMKYSH@MAIL.RU"
+    }
+  ],
+  "repositories": [
+    {
+      "type": "git",
+      "url": "https://github.com/axiles89/yii2-coordinator"
+    }
+  ],
+  "require": {
+    "php": ">= 5.4",
+    "yiisoft/yii2": ">=2.0.5",
+    "axiles89/yii2-coordinator": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "axiles89\\sharding\\": "lib/"
+    }
+  }
+}
