@@ -9,20 +9,19 @@
 
 namespace axiles89\sharding;
 
-
 use yii\base\Exception;
 use yii\base\InvalidParamException;
 use yii\db\Query;
 
 /**
- * Класс для получения значения ключей шарда из условия запроса
+ * РљР»Р°СЃСЃ РґР»СЏ РїРѕР»СѓС‡РµРЅРёСЏ Р·РЅР°С‡РµРЅРёСЏ РєР»СЋС‡РµР№ С€Р°СЂРґР° РёР· СѓСЃР»РѕРІРёСЏ Р·Р°РїСЂРѕСЃР°
  * Class HelperCoordinator
  * @package axiles89\sharding
  */
 class HelperCoordinator
 {
     /**
-     * Префикс параметров
+     * РџСЂРµС„РёРєСЃ РїР°СЂР°РјРµС‚СЂРѕРІ
      */
     const PARAM_PREFIX = ':qp';
 
@@ -53,13 +52,15 @@ class HelperCoordinator
     /**
      *
      */
-    private function __construct() {
+    private function __construct()
+    {
     }
 
     /**
      * @return mixed
      */
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (!isset(static::$instance)) {
             static::$instance = new self;
         }
@@ -72,7 +73,8 @@ class HelperCoordinator
      * @param $column
      * @return mixed
      */
-    public function getData($where, $params, $column) {
+    public function getData($where, $params, $column)
+    {
         $result = $this->buildWhere($where, $params);
 
         $sql = strtr($result['where'], $result['params']);
@@ -85,7 +87,8 @@ class HelperCoordinator
      * @param $params
      * @return array
      */
-    public function buildWhere($condition, $params) {
+    public function buildWhere($condition, $params)
+    {
         $where = $this->buildCondition($condition, $params);
 
         $result = [
@@ -97,14 +100,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель условий (выбор нужного метода или по хешу, если условие задано как массив)
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ СѓСЃР»РѕРІРёР№ (РІС‹Р±РѕСЂ РЅСѓР¶РЅРѕРіРѕ РјРµС‚РѕРґР° РёР»Рё РїРѕ С…РµС€Сѓ, РµСЃР»Рё СѓСЃР»РѕРІРёРµ Р·Р°РґР°РЅРѕ РєР°Рє РјР°СЃСЃРёРІ)
      * @param $condition
      * @param $params
      * @return string
      */
-    public function buildCondition($condition, &$params) {
+    public function buildCondition($condition, &$params)
+    {
         if (!is_array($condition)) {
-            return (string) $condition;
+            return (string)$condition;
         } elseif (empty($condition)) {
             return '';
         }
@@ -126,13 +130,14 @@ class HelperCoordinator
 
 
     /**
-     * Построитель по хешу (['id' => 123, 'parent_id' => [13,4,45]])
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ РїРѕ С…РµС€Сѓ (['id' => 123, 'parent_id' => [13,4,45]])
      * @param $condition
      * @param $params
      * @return string
      * @throws Exception
      */
-    public function buildHashCondition($condition, &$params) {
+    public function buildHashCondition($condition, &$params)
+    {
         $parts = [];
         foreach ($condition as $column => $value) {
             if (is_array($value)) {
@@ -157,13 +162,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель запросов по условию типа ['>=', 'id', 3]
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ Р·Р°РїСЂРѕСЃРѕРІ РїРѕ СѓСЃР»РѕРІРёСЋ С‚РёРїР° ['>=', 'id', 3]
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
+     * @throws InvalidParamException
      */
-    public function buildSimpleCondition($operator, $operands, &$params) {
+    public function buildSimpleCondition($operator, $operands, &$params)
+    {
         if (count($operands) !== 2) {
             throw new InvalidParamException("Operator '$operator' requires two operands.");
         }
@@ -187,13 +194,14 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель условий and
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ СѓСЃР»РѕРІРёР№ and
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
      */
-    public function buildAndCondition($operator, $operands, &$params) {
+    public function buildAndCondition($operator, $operands, &$params)
+    {
         $parts = [];
 
         foreach ($operands as $operand) {
@@ -213,13 +221,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель not
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ not
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
+     * @throws InvalidParamException
      */
-    public function buildNotCondition($operator, $operands, &$params) {
+    public function buildNotCondition($operator, $operands, &$params)
+    {
         if (count($operands) != 1) {
             throw new InvalidParamException("Operator '$operator' requires exactly one operand.");
         }
@@ -238,13 +248,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель between (['BETWEEN', 'id', 199, 202])
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ between (['BETWEEN', 'id', 199, 202])
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
+     * @throws InvalidParamException
      */
-    public function buildBetweenCondition($operator, $operands, &$params) {
+    public function buildBetweenCondition($operator, $operands, &$params)
+    {
         if (!isset($operands[0], $operands[1], $operands[2])) {
             throw new InvalidParamException("Operator '$operator' requires three operands.");
         }
@@ -274,14 +286,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель in (['in', 'id', [100,101]])
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ in (['in', 'id', [100,101]])
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
      * @throws Exception
      */
-    public function buildInCondition($operator, $operands, &$params) {
+    public function buildInCondition($operator, $operands, &$params)
+    {
         if (!isset($operands[0], $operands[1])) {
             throw new Exception("Operator '$operator' requires two operands.");
         }
@@ -296,9 +309,9 @@ class HelperCoordinator
             return '';
         }
 
-        $values = (array) $values;
+        $values = (array)$values;
 
-        //todo in по 2 колонкам. Проверить целесообразность
+        //todo in РїРѕ 2 РєРѕР»РѕРЅРєР°Рј. РџСЂРѕРІРµСЂРёС‚СЊ С†РµР»РµСЃРѕРѕР±СЂР°Р·РЅРѕСЃС‚СЊ
         if (count($column) > 1) {
             return '';
         }
@@ -334,13 +347,15 @@ class HelperCoordinator
     }
 
     /**
-     * Построитель like и not like (['NOT LIKE', 'title', ['dima', 'fdfdf']])
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ like Рё not like (['NOT LIKE', 'title', ['dima', 'fdfdf']])
      * @param $operator
      * @param $operands
      * @param $params
      * @return string
+     * @throws InvalidParamException
      */
-    public function buildLikeCondition($operator, $operands, &$params) {
+    public function buildLikeCondition($operator, $operands, &$params)
+    {
         if (!isset($operands[0], $operands[1])) {
             throw new InvalidParamException("Operator '$operator' requires two operands.");
         }
@@ -348,7 +363,7 @@ class HelperCoordinator
         $escape = isset($operands[2]) ? $operands[2] : ['%' => '\%', '_' => '\_', '\\' => '\\\\'];
         unset($operands[2]);
 
-        // Поддержка not и объединений or и and
+        // РџРѕРґРґРµСЂР¶РєР° not Рё РѕР±СЉРµРґРёРЅРµРЅРёР№ or Рё and
         if (!preg_match('/^(AND |OR |)(((NOT |))I?LIKE)/', $operator, $matches)) {
             throw new InvalidParamException("Invalid operator '$operator'.");
         }
@@ -391,7 +406,8 @@ class HelperCoordinator
      * @param $params
      * @return string
      */
-    public function buildExistsCondition($operator, $operands, &$params) {
-        return "";
+    public function buildExistsCondition($operator, $operands, &$params)
+    {
+        return '';
     }
 }

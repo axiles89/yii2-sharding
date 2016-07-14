@@ -44,29 +44,32 @@ class Command extends Component
     public $fetchMode = \PDO::FETCH_ASSOC;
 
     /**
-     * Ïîëó÷åíèå âñåõ äàííûõ
+     * ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ Ð²ÑÐµÑ… Ð´Ð°Ð½Ð½Ñ‹Ñ…
      * @param null $fetchMode
      * @return array
      */
-    public function queryAll($fetchMode = null) {
+    public function queryAll($fetchMode = null)
+    {
         return $this->queryInternal('fetchAll', $fetchMode);
     }
 
     /**
-     * Èçâëå÷åíèå ñëåäóþùåé ñòðîêè èç ðåçóëüòèðóþùåãî íàáîðà (ïåðâîé)
+     * Ð˜Ð·Ð²Ð»ÐµÑ‡ÐµÐ½Ð¸Ðµ ÑÐ»ÐµÐ´ÑƒÑŽÑ‰ÐµÐ¹ ÑÑ‚Ñ€Ð¾ÐºÐ¸ Ð¸Ð· Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð¸Ñ€ÑƒÑŽÑ‰ÐµÐ³Ð¾ Ð½Ð°Ð±Ð¾Ñ€Ð° (Ð¿ÐµÑ€Ð²Ð¾Ð¹)
      * @param null $fetchMode
      * @return array
      */
-    public function queryOne($fetchMode = null) {
+    public function queryOne($fetchMode = null)
+    {
         return $this->queryInternal('fetch', $fetchMode);
     }
 
     /**
-     * Ïîäñòàíîâêà ïàðàìåòðîâ è ïîëó÷åíèå ãîòîâîãî sql çàïðîñà äëÿ êàæäîãî øàðäà
+     * ÐŸÐ¾Ð´ÑÑ‚Ð°Ð½Ð¾Ð²ÐºÐ° Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð² Ð¸ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ Ð³Ð¾Ñ‚Ð¾Ð²Ð¾Ð³Ð¾ sql Ð·Ð°Ð¿Ñ€Ð¾ÑÐ° Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
      * @return array
      * @throws \yii\base\InvalidConfigException
      */
-    public function getRawSql() {
+    public function getRawSql()
+    {
         if (empty($this->params)) {
             return $this->sql;
         }
@@ -100,18 +103,19 @@ class Command extends Component
     }
 
     /**
-     * Ïîäãîòîâêà pdo êîìïîíåíòîâ äëÿ êàæäîãî øàðäà ñ åãî çàïðîñîì
+     * ÐŸÐ¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²ÐºÐ° pdo ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð° Ñ ÐµÐ³Ð¾ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ¾Ð¼
      * @param null $forRead
      * @throws \Exception
      */
-    public function prepare($forRead = null) {
+    public function prepare($forRead = null)
+    {
         $sql = $this->getSql();
 
         try {
             foreach ($this->db as $dbName) {
                 $db = \Yii::$app->get($dbName);
 
-                // Ïîëó÷àåì pdo îáúåêò äëÿ íóæíîãî êîìïîíåíòà db
+                // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ pdo Ð¾Ð±ÑŠÐµÐºÑ‚ Ð´Ð»Ñ Ð½ÑƒÐ¶Ð½Ð¾Ð³Ð¾ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð° db
                 if ($forRead || $forRead === null && $db->getSchema()->isReadQuery($sql)) {
                     $pdo = $db->getSlavePdo();
                 } else {
@@ -124,17 +128,18 @@ class Command extends Component
             $this->bindPendingParams();
 
         } catch (\Exception $e) {
-            $message = $e->getMessage() . "\nFailed to prepare SQL: $sql";
+            $message = $e->getMessage() . "\nFailed to prepare SQL: " . var_export($sql, true);
             $errorInfo = $e instanceof \PDOException ? $e->errorInfo : null;
-            throw new \Exception($message, $errorInfo, (int) $e->getCode(), $e);
+            throw new \Exception($message . $errorInfo, (int)$e->getCode(), $e);
         }
     }
 
     /**
-     * Ïîëó÷åíèå çíà÷åíèÿ ïåðâîãî ñòîëáöà ñëåäóþùåé ñòðîêè
+     * ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¿ÐµÑ€Ð²Ð¾Ð³Ð¾ ÑÑ‚Ð¾Ð»Ð±Ñ†Ð° ÑÐ»ÐµÐ´ÑƒÑŽÑ‰ÐµÐ¹ ÑÑ‚Ñ€Ð¾ÐºÐ¸
      * @return int
      */
-    public function queryScalar() {
+    public function queryScalar()
+    {
         $data = $this->queryInternal('fetchColumn', 0);
 
         $result = 0;
@@ -146,14 +151,15 @@ class Command extends Component
     }
 
     /**
-     * Èñïîëíåíèå çàïðîñîâ select
+     * Ð˜ÑÐ¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ðµ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ¾Ð² select
      * @param $method
      * @param null $fetchMode
      * @return array
      * @throws \Exception
      * @throws \yii\base\InvalidConfigException
      */
-    protected function queryInternal($method, $fetchMode = null) {
+    protected function queryInternal($method, $fetchMode = null)
+    {
         $token = $this->getRawSql();
         $this->prepare(true);
 
@@ -166,7 +172,7 @@ class Command extends Component
                 if ($fetchMode === null) {
                     $fetchMode = $this->fetchMode;
                 }
-                $data = call_user_func_array([$pdo, $method], (array) $fetchMode);
+                $data = call_user_func_array([$pdo, $method], (array)$fetchMode);
 
                 $pdo->closeCursor();
 
@@ -185,11 +191,12 @@ class Command extends Component
     }
 
     /**
-     * Èñïîëíåíèå çàïðîñîâ òèïà insert, delete, update
+     * Ð˜ÑÐ¿Ð¾Ð»Ð½ÐµÐ½Ð¸Ðµ Ð·Ð°Ð¿Ñ€Ð¾ÑÐ¾Ð² Ñ‚Ð¸Ð¿Ð° insert, delete, update
      * @return int
      * @throws \yii\base\InvalidConfigException
      */
-    public function execute() {
+    public function execute()
+    {
         $sql = $this->getSql();
         $token = $this->getRawSql();
 
@@ -217,12 +224,13 @@ class Command extends Component
     }
 
     /**
-     * Ïðèâÿçêà ïàðàìåòðîâ äëÿ äàëüíåéøåé ïðèâÿçêè ê êîíêðåòíûì îáúåêòàì pdo
-     * @param $values - ìàññèâ ïàðàìåòðîâ çàïðîñà, êîòîðûé ïîñòðîèë builder ([:qp0] => 555)
+     * ÐŸÑ€Ð¸Ð²ÑÐ·ÐºÐ° Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð² Ð´Ð»Ñ Ð´Ð°Ð»ÑŒÐ½ÐµÐ¹ÑˆÐµÐ¹ Ð¿Ñ€Ð¸Ð²ÑÐ·ÐºÐ¸ Ðº ÐºÐ¾Ð½ÐºÑ€ÐµÑ‚Ð½Ñ‹Ð¼ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°Ð¼ pdo
+     * @param $values - Ð¼Ð°ÑÑÐ¸Ð² Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð² Ð·Ð°Ð¿Ñ€Ð¾ÑÐ°, ÐºÐ¾Ñ‚Ð¾Ñ€Ñ‹Ð¹ Ð¿Ð¾ÑÑ‚Ñ€Ð¾Ð¸Ð» builder ([:qp0] => 555)
      * @return $this
      * @throws \yii\base\InvalidConfigException
      */
-    public function bindValues($values) {
+    public function bindValues($values)
+    {
         if (empty($values)) {
             return $this;
         }
@@ -246,9 +254,10 @@ class Command extends Component
     }
 
     /**
-     * Ïðèâÿçêà ïàðàìåòðîâ ê îáúåêòó pdo êàæäîãî øàðäà
+     * ÐŸÑ€Ð¸Ð²ÑÐ·ÐºÐ° Ð¿Ð°Ñ€Ð°Ð¼ÐµÑ‚Ñ€Ð¾Ð² Ðº Ð¾Ð±ÑŠÐµÐºÑ‚Ñƒ pdo ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
      */
-    protected function bindPendingParams() {
+    protected function bindPendingParams()
+    {
         foreach ($this->_pendingParams as $dbName => $params) {
             foreach ($params as $name => $value) {
                 $this->pdoStatement[$dbName]->bindValue($name, $value[0], $value[1]);
@@ -260,7 +269,8 @@ class Command extends Component
     /**
      * @return mixed
      */
-    public function getSql() {
+    public function getSql()
+    {
         return $this->sql;
     }
 

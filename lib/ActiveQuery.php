@@ -25,7 +25,7 @@ use yii\db\QueryTrait;
  * Class ActiveQuery
  * @package axiles89\sharding
  */
-class ActiveQuery extends Component implements ActiveQueryInterface
+class ActiveQuery extends Query implements ActiveQueryInterface
 {
     use QueryTrait;
     use ActiveQueryTrait;
@@ -72,18 +72,20 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param array $modelClass
      * @param array $config
      */
-    public function __construct($modelClass, $config = []) {
+    public function __construct($modelClass, $config = [])
+    {
         $this->modelClass = $modelClass;
         parent::__construct($config);
     }
 
     /**
-     * Ñîçäàíèå êîìàíäû ñ íóæíûì çïðîñîâ äëÿ íóæíûõ øàðäîâ
+     * Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð°Ð½Ð´Ñ‹ Ñ Ð½ÑƒÐ¶Ð½Ñ‹Ð¼ Ð·Ð¿Ñ€Ð¾ÑÐ¾Ð² Ð´Ð»Ñ Ð½ÑƒÐ¶Ð½Ñ‹Ñ… ÑˆÐ°Ñ€Ð´Ð¾Ð²
      * @param $shardDb
      * @return mixed
      * @throws InvalidConfigException
      */
-    public function createCommand($shardDb) {
+    public function createCommand($shardDb = null)
+    {
         $modelClass = $this->modelClass;
         $db = $modelClass::getDb();
 
@@ -92,10 +94,10 @@ class ActiveQuery extends Component implements ActiveQueryInterface
                 throw new InvalidConfigException('The sharding component for this Active Record model not found');
             }
 
-            // Ïîëó÷àåì íóæíûå øàðäû
+            // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð½ÑƒÐ¶Ð½Ñ‹Ðµ ÑˆÐ°Ñ€Ð´Ñ‹
             $valueKey = HelperCoordinator::getInstance()->getData($this->where, $this->params, $modelClass::shardingColumn());
             $shardType = $db->shard[$modelClass::shardingType()];
-            $coordinator = \Yii::$app->$shardType['coordinator'];
+            $coordinator = \Yii::$app->{$shardType['coordinator']};
             $shardDb = $coordinator->getShard($shardType['db'], $valueKey);
 
             if (!$shardDb) {
@@ -103,7 +105,7 @@ class ActiveQuery extends Component implements ActiveQueryInterface
             }
         }
 
-        // Ñòðîèì çàïðîñ äëÿ êàæäîãî øàðäà
+        // Ð¡Ñ‚Ñ€Ð¾Ð¸Ð¼ Ð·Ð°Ð¿Ñ€Ð¾Ñ Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
         list($sql, $params) = $db->getQueryBuilder($shardDb)->build($this);
         $command = $db->createCommand($shardDb, $sql, $params);
 
@@ -114,7 +116,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param $params
      * @return $this
      */
-    public function addParams($params) {
+    public function addParams($params)
+    {
         if (!empty($params)) {
             if (empty($this->params)) {
                 $this->params = $params;
@@ -136,7 +139,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param null $option
      * @return $this
      */
-    public function select($columns, $option = null) {
+    public function select($columns, $option = null)
+    {
         if (!is_array($columns)) {
             // ('id', 'title') => ['id' => '', 'title' => '']
             $columns = preg_split('/\s*,\s*/', trim($columns), -1, PREG_SPLIT_NO_EMPTY);
@@ -151,7 +155,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param bool|false $all
      * @return $this
      */
-    public function union($sql, $all = false) {
+    public function union($sql, $all = false)
+    {
         $this->union[] = ['query' => $sql, 'all' => $all];
         return $this;
     }
@@ -162,7 +167,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param string $on
      * @return $this
      */
-    public function join($type, $table, $on = '') {
+    public function join($type, $table, $on = '', $params = [])
+    {
         $this->join[] = [$type, $table, $on];
         return $this;
     }
@@ -172,7 +178,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param string $on
      * @return $this
      */
-    public function innerJoin($table, $on = '') {
+    public function innerJoin($table, $on = '', $params = [])
+    {
         $this->join[] = ['INNER JOIN', $table, $on];
         return $this;
     }
@@ -182,7 +189,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param string $on
      * @return $this
      */
-    public function leftJoin($table, $on = '') {
+    public function leftJoin($table, $on = '', $params = [])
+    {
         $this->join[] = ['LEFT JOIN', $table, $on];
         return $this;
     }
@@ -192,7 +200,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param string $on
      * @return $this
      */
-    public function rightJoin($table, $on = '')  {
+    public function rightJoin($table, $on = '', $params = [])
+    {
         $this->join[] = ['RIGHT JOIN', $table, $on];
         return $this;
     }
@@ -201,9 +210,10 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param $columns
      * @return $this
      */
-    public function groupBy($columns) {
+    public function groupBy($columns)
+    {
         if (!is_array($columns)) {
-            $columns = array_map("trim", explode(",", trim($columns)));
+            $columns = array_map('trim', explode(',', trim($columns)));
         }
 
         $this->groupBy = $columns;
@@ -214,7 +224,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param bool|true $value
      * @return $this
      */
-    public function distinct($value = true) {
+    public function distinct($value = true)
+    {
         $this->distinct = $value;
         return $this;
     }
@@ -223,9 +234,10 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param $columns
      * @return $this
      */
-    public function addGroupBy($columns) {
+    public function addGroupBy($columns)
+    {
         if (!is_array($columns)) {
-            $columns = array_map("trim", explode(",", trim($columns)));
+            $columns = array_map('trim', explode(',', trim($columns)));
         }
         if ($this->groupBy === null) {
             $this->groupBy = $columns;
@@ -240,7 +252,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param array $params
      * @return $this
      */
-    public function having($condition, $params = []) {
+    public function having($condition, $params = [])
+    {
         $this->having = $condition;
         $this->addParams($params);
         return $this;
@@ -251,7 +264,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param array $params
      * @return $this
      */
-    public function andHaving($condition, $params = []) {
+    public function andHaving($condition, $params = [])
+    {
         if ($this->having === null) {
             $this->having = $condition;
         } else {
@@ -266,7 +280,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param array $params
      * @return $this
      */
-    public function orHaving($condition, $params = []) {
+    public function orHaving($condition, $params = [])
+    {
         if ($this->having === null) {
             $this->having = $condition;
         } else {
@@ -277,12 +292,13 @@ class ActiveQuery extends Component implements ActiveQueryInterface
     }
 
     /**
-     * Ìåòîä íåîáõîäèì äëÿ ñîçäàíèÿ îáúåêòà çàïðîñà äëÿ QueryBuilder
+     * ÐœÐµÑ‚Ð¾Ð´ Ð½ÐµÐ¾Ð±Ñ…Ð¾Ð´Ð¸Ð¼ Ð´Ð»Ñ ÑÐ¾Ð·Ð´Ð°Ð½Ð¸Ñ Ð¾Ð±ÑŠÐµÐºÑ‚Ð° Ð·Ð°Ð¿Ñ€Ð¾ÑÐ° Ð´Ð»Ñ QueryBuilder
      * @param $builder
      * @return Query
      * @throws Exception
      */
-    public function prepare($builder) {
+    public function prepare($builder)
+    {
         if (empty($this->from)) {
             $modelClass = $this->modelClass;
             $tableName = $modelClass::tableName();
@@ -290,7 +306,7 @@ class ActiveQuery extends Component implements ActiveQueryInterface
         }
 
         if (empty($this->select) && !empty($this->join)) {
-            foreach ((array) $this->from as $alias => $table) {
+            foreach ((array)$this->from as $alias => $table) {
                 if (is_string($alias)) {
                     $this->select = ["$alias.*"];
                 } elseif (is_string($table)) {
@@ -341,11 +357,13 @@ class ActiveQuery extends Component implements ActiveQueryInterface
         return $query;
     }
 
-    /** Ñîçäàíèå ìîäåëè èç ðåçóëüòàòîâ âûáîðêè
+    /**
+     * Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¸Ðµ Ð¼Ð¾Ð´ÐµÐ»Ð¸ Ð¸Ð· Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚Ð¾Ð² Ð²Ñ‹Ð±Ð¾Ñ€ÐºÐ¸
      * @param $rows
      * @return array|\yii\db\ActiveRecord[]
      */
-    public function populate($rows) {
+    public function populate($rows)
+    {
         if (empty($rows)) {
             return [];
         }
@@ -366,12 +384,14 @@ class ActiveQuery extends Component implements ActiveQueryInterface
     }
 
     /**
-     * Óäàëåíèå äóáëèêàòîâ ïî ïåðâè÷íîìó êëþ÷ó
+     * Ð£Ð´Ð°Ð»ÐµÐ½Ð¸Ðµ Ð´ÑƒÐ±Ð»Ð¸ÐºÐ°Ñ‚Ð¾Ð² Ð¿Ð¾ Ð¿ÐµÑ€Ð²Ð¸Ñ‡Ð½Ð¾Ð¼Ñƒ ÐºÐ»ÑŽÑ‡Ñƒ
      * @param $models
      * @return array
+     * @throws InvalidCallException
      * @throws InvalidConfigException
      */
-    private function removeDuplicatedModels($models) {
+    private function removeDuplicatedModels($models)
+    {
         $hash = [];
         /* @var $class ActiveRecord */
         $class = $this->modelClass;
@@ -423,7 +443,8 @@ class ActiveQuery extends Component implements ActiveQueryInterface
      * @param callable|null $callable
      * @return $this
      */
-    public function viaTable($tableName, $link, callable $callable = null) {
+    public function viaTable($tableName, $link, callable $callable = null)
+    {
         $relation = new ActiveQuery(get_class($this->primaryModel), [
             'from' => [$tableName],
             'link' => $link,
@@ -439,29 +460,31 @@ class ActiveQuery extends Component implements ActiveQueryInterface
     }
 
     /**
-     * @param null $db - íàçâàíèå êîìïîíåíòîâ íóæíûõ db êîìïîíåíòîâ ['db1', 'db2']
+     * @param null $db - Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð½ÑƒÐ¶Ð½Ñ‹Ñ… db ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ['db1', 'db2']
      * @return array|\yii\db\ActiveRecord[]
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function all($db = null) {
+    public function all($db = null)
+    {
         $command = $this->createCommand($db);
 
         if ((empty($this->groupBy) && empty($this->having) && empty($this->union)) || (isset($command->db) and count($command->db) < 2)) {
             $rows = $this->createCommand($db)->queryAll();;
             return $this->populate($rows);
         } else {
-            throw new Exception("This query uses more than one database");
+            throw new Exception('This query uses more than one database');
         }
     }
 
     /**
-     * @param null $db - íàçâàíèå êîìïîíåíòîâ íóæíûõ db êîìïîíåíòîâ ['db1', 'db2']
+     * @param null $db - Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð½ÑƒÐ¶Ð½Ñ‹Ñ… db ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ['db1', 'db2']
      * @return null
      * @throws Exception
      * @throws InvalidConfigException
      */
-    public function one($db = null) {
+    public function one($db = null)
+    {
         $command = $this->createCommand($db);
 
         if ((empty($this->groupBy) && empty($this->having) && empty($this->union)) || (isset($command->db) and count($command->db) < 2)) {
@@ -474,26 +497,28 @@ class ActiveQuery extends Component implements ActiveQueryInterface
                 return null;
             }
         } else {
-            throw new Exception("This query uses more than one database");
+            throw new Exception('This query uses more than one database');
         }
     }
 
     /**
      * @param string $q
-     * @param null $db - íàçâàíèå êîìïîíåíòîâ íóæíûõ db êîìïîíåíòîâ ['db1', 'db2']
+     * @param null $db - Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð½ÑƒÐ¶Ð½Ñ‹Ñ… db ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ['db1', 'db2']
      * @return mixed
      * @throws Exception
      */
-    public function count($q = '*', $db = null) {
+    public function count($q = '*', $db = null)
+    {
         return $this->queryScalar("COUNT($q)", $db);
     }
 
     /**
-     * @param null $db - íàçâàíèå êîìïîíåíòîâ íóæíûõ db êîìïîíåíòîâ ['db1', 'db2']
+     * @param null $db - Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð½ÑƒÐ¶Ð½Ñ‹Ñ… db ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ['db1', 'db2']
      * @return bool
      * @throws InvalidConfigException
      */
-    public function exists($db = null) {
+    public function exists($db = null)
+    {
         $select = $this->select;
         $this->select = [new Expression('1')];
         $command = $this->createCommand($db);
@@ -502,14 +527,15 @@ class ActiveQuery extends Component implements ActiveQueryInterface
     }
 
     /**
-     * Ïîëó÷åíèå çíà÷åíèÿ ïåðâîé êîëîíêè ðåçóëüòàòà âûáîðêè (äëÿ ñêàëÿðíûõ çàïðîñîâ)
+     * ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ð¿ÐµÑ€Ð²Ð¾Ð¹ ÐºÐ¾Ð»Ð¾Ð½ÐºÐ¸ Ñ€ÐµÐ·ÑƒÐ»ÑŒÑ‚Ð°Ñ‚Ð° Ð²Ñ‹Ð±Ð¾Ñ€ÐºÐ¸ (Ð´Ð»Ñ ÑÐºÐ°Ð»ÑÑ€Ð½Ñ‹Ñ… Ð·Ð°Ð¿Ñ€Ð¾ÑÐ¾Ð²)
      * @param $selectExpression
-     * @param $db - íàçâàíèå êîìïîíåíòîâ íóæíûõ db êîìïîíåíòîâ ['db1', 'db2']
+     * @param $db - Ð½Ð°Ð·Ð²Ð°Ð½Ð¸Ðµ ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² Ð½ÑƒÐ¶Ð½Ñ‹Ñ… db ÐºÐ¾Ð¼Ð¿Ð¾Ð½ÐµÐ½Ñ‚Ð¾Ð² ['db1', 'db2']
      * @return mixed
      * @throws Exception
      * @throws InvalidConfigException
      */
-    protected function queryScalar($selectExpression, $db) {
+    protected function queryScalar($selectExpression, $db)
+    {
         $this->select = [$selectExpression];
         $this->limit = null;
         $this->offset = null;
@@ -518,7 +544,7 @@ class ActiveQuery extends Component implements ActiveQueryInterface
         if ((empty($this->groupBy) && empty($this->having) && empty($this->union) && !$this->distinct) || (isset($command->db) and count($command->db) < 2)) {
             return $command->queryScalar();
         } else {
-            throw new Exception("This query uses more than one database");
+            throw new Exception('This query uses more than one database');
         }
     }
 

@@ -9,7 +9,6 @@
 
 namespace axiles89\sharding;
 
-
 use yii\base\InvalidParamException;
 
 /**
@@ -19,15 +18,15 @@ use yii\base\InvalidParamException;
 class ParserSql
 {
     /**
-     * Âûðàæåíèÿ äëÿ ïîëó÷åíèÿ çíà÷åíèÿ ðàâåíñòâà
+     * Ð’Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ñ Ð´Ð»Ñ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ñ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ñ€Ð°Ð²ÐµÐ½ÑÑ‚Ð²Ð°
      */
     const REG_AND = '/$:params\s*=\s*([a-zA-Z_0-9]+)/i';
     /**
-     * Âûðàæåíèå äëÿ ïîëó÷åíèÿ äàííûõ in
+     * Ð’Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ðµ Ð´Ð»Ñ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ñ Ð´Ð°Ð½Ð½Ñ‹Ñ… in
      */
     const REG_IN = '/$:params\s*IN\s*\(([a-zA-Z_0-9,\s]+)\)/i';
     /**
-     * Âûðàæåíèå äëÿ ïîëó÷åíèÿ äàííûõ between
+     * Ð’Ñ‹Ñ€Ð°Ð¶ÐµÐ½Ð¸Ðµ Ð´Ð»Ñ Ð¿Ð¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ñ Ð´Ð°Ð½Ð½Ñ‹Ñ… between
      */
     const REG_BETWEEN = '/$:params\s*BETWEEN\s*([0-9]+) AND ([0-9]+)/i';
 
@@ -56,13 +55,15 @@ class ParserSql
     /**
      *
      */
-    private function __construct() {
+    private function __construct()
+    {
     }
 
     /**
      * @return mixed
      */
-    public static function getInstance() {
+    public static function getInstance()
+    {
         if (!isset(static::$instance)) {
             static::$instance = new self;
         }
@@ -71,26 +72,32 @@ class ParserSql
 
     /**
      * @param mixed $sql
+     * @return $this
      */
-    public function setSql($sql) {
+    public function setSql($sql)
+    {
         $this->sql = $sql;
         return $this;
     }
 
     /**
      * @param mixed $column
+     * @return $this
      */
-    public function setColumn($column) {
+    public function setColumn($column)
+    {
         $this->column = $column;
         return $this;
     }
 
     /**
      * @return array
+     * @throws InvalidParamException
      */
-    public function execute() {
+    public function execute()
+    {
         if (!$this->column) {
-            throw new InvalidParamException("Set the column for parser.");
+            throw new InvalidParamException('Set the column for parser.');
         }
 
         $result = [];
@@ -103,10 +110,11 @@ class ParserSql
     }
 
     /**
-     * Íàõîäèì çíà÷åíèÿ ðàâåíñòâà â sql
+     * ÐÐ°Ñ…Ð¾Ð´Ð¸Ð¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ñ Ñ€Ð°Ð²ÐµÐ½ÑÑ‚Ð²Ð° Ð² sql
      * @param $result
      */
-    private function parserParamsAnd(&$result) {
+    private function parserParamsAnd(&$result)
+    {
         if (preg_match_all(str_replace("$:params", $this->column, self::REG_AND), $this->sql, $matches)) {
 
             /*
@@ -121,10 +129,11 @@ class ParserSql
     }
 
     /**
-     * Íàõîäèì çíà÷åíèé in â sql
+     * ÐÐ°Ñ…Ð¾Ð´Ð¸Ð¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ð¹ in Ð² sql
      * @param $result
      */
-    private function parserParamsIn(&$result) {
+    private function parserParamsIn(&$result)
+    {
         if (preg_match_all(str_replace("$:params", $this->column, self::REG_IN), $this->sql, $matches)) {
             /*
              *  Array
@@ -134,17 +143,18 @@ class ParserSql
              */
             list(, $data) = $matches;
             foreach ($data as $value) {
-                $arrData = array_map("trim", explode(",",$value));;
+                $arrData = array_map("trim", explode(",", $value));;
                 $result = array_merge($result, $arrData);
             }
         }
     }
 
     /**
-     * Íàõîäèì çíà÷åíèé between â sql
+     * ÐÐ°Ñ…Ð¾Ð´Ð¸Ð¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ð¹ between Ð² sql
      * @param $result
      */
-    private function parserParamsBetween(&$result) {
+    private function parserParamsBetween(&$result)
+    {
         if (preg_match_all(str_replace("$:params", $this->column, self::REG_BETWEEN), $this->sql, $matches, PREG_SET_ORDER)) {
             /*
              *   [0] => id BETWEEN 199 AND 202
