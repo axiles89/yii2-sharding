@@ -153,7 +153,7 @@ abstract class ActiveRecord extends BaseActiveRecord
 
         // Получаем номер конкретного шарда для insert новой запист
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $values[static::shardingColumn()]);
 
         if (!$shardDb) {
@@ -215,7 +215,7 @@ abstract class ActiveRecord extends BaseActiveRecord
         // Получаем нужный шард или все шарды для данного типа разделения
         $valueKey = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $valueKey);
 
         if (!$shardDb) {
@@ -249,7 +249,7 @@ abstract class ActiveRecord extends BaseActiveRecord
         // Получаем нужный шард или все шарды для данного типа разделения
         $helper = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $helper);
 
         if (!$shardDb) {
@@ -289,7 +289,7 @@ abstract class ActiveRecord extends BaseActiveRecord
         // Получаем нужный шард или все шарды для данного типа разделения
         $valueKey = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $valueKey);
 
         if (!$shardDb) {

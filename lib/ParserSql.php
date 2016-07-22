@@ -103,7 +103,7 @@ class ParserSql
         $result = [];
 
         foreach ($this->typeParser as $method) {
-            $this->$method($result);
+            $this->{$method($result)};
         }
 
         return $result;
