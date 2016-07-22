@@ -122,7 +122,7 @@ class HelperCoordinator
                 $method = 'buildSimpleCondition';
             }
             array_shift($condition);
-            return $this->{$method($operator, $condition, $params)};
+            return $this->$method($operator, $condition, $params);
         } else {
             return $this->buildHashCondition($condition, $params);
         }
