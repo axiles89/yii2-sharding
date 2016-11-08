@@ -64,6 +64,18 @@ class Command extends Component
     }
 
     /**
+     * Executes the SQL statement and returns the first column of the result.
+     * This method is best used when only the first column of result (i.e. the first element in each row)
+     * is needed for a query.
+     * @return array the first column of the query result. Empty array is returned if the query results in nothing.
+     * @throws Exception execution failed
+     */
+    public function queryColumn()
+    {
+        return $this->queryInternal('fetchAll', \PDO::FETCH_COLUMN);
+    }
+
+    /**
      * Подстановка параметров и получение готового sql запроса для каждого шарда
      * @return array
      * @throws \yii\base\InvalidConfigException
