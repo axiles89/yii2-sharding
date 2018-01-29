@@ -9,18 +9,17 @@
 
 namespace axiles89\sharding;
 
-
 use yii\base\Object;
 
 /**
- * Построитель запросов
+ * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ Р·Р°РїСЂРѕСЃРѕРІ
  * Class QueryBuilder
  * @package axiles89\sharding
  */
 class QueryBuilder extends Object
 {
     /**
-     * Массив названий компонентов db
+     * РњР°СЃСЃРёРІ РЅР°Р·РІР°РЅРёР№ РєРѕРјРїРѕРЅРµРЅС‚РѕРІ db
      * @var array
      */
     private $db;
@@ -29,13 +28,14 @@ class QueryBuilder extends Object
      * @param array $dbComponent
      * @param array $config
      */
-    public function __construct(array $dbComponent, $config = []) {
+    public function __construct(array $dbComponent, array $config = [])
+    {
         $this->db = $dbComponent;
         parent::__construct($config);
     }
 
     /**
-     * Построение запросов delete для всех нужных компонентов db
+     * РџРѕСЃС‚СЂРѕРµРЅРёРµ Р·Р°РїСЂРѕСЃРѕРІ delete РґР»СЏ РІСЃРµС… РЅСѓР¶РЅС‹С… РєРѕРјРїРѕРЅРµРЅС‚РѕРІ db
      * @param $table
      * @param string $condition
      * @param array $params
@@ -53,7 +53,8 @@ class QueryBuilder extends Object
      *
      * @throws \yii\base\InvalidConfigException
      */
-    public function delete($table, $condition = '', $params = []) {
+    public function delete($table, $condition = '', array $params = [])
+    {
         $result = [
             0 => [],
             1 => []
@@ -70,7 +71,7 @@ class QueryBuilder extends Object
     }
 
     /**
-     * Построение запросов update для всех нужных компонентов db
+     * РџРѕСЃС‚СЂРѕРµРЅРёРµ Р·Р°РїСЂРѕСЃРѕРІ update РґР»СЏ РІСЃРµС… РЅСѓР¶РЅС‹С… РєРѕРјРїРѕРЅРµРЅС‚РѕРІ db
      * @param $table
      * @param $columns
      * @param string $condition
@@ -90,7 +91,8 @@ class QueryBuilder extends Object
      *
      * @throws \yii\base\InvalidConfigException
      */
-    public function update($table, $columns, $condition = '', $params = []) {
+    public function update($table, $columns, $condition = '', array $params = [])
+    {
         $result = [
             0 => [],
             1 => []
@@ -107,7 +109,7 @@ class QueryBuilder extends Object
     }
 
     /**
-     * Построитель запросов select
+     * РџРѕСЃС‚СЂРѕРёС‚РµР»СЊ Р·Р°РїСЂРѕСЃРѕРІ select
      * @param $query
      * @param array $params
      * @return array
@@ -124,7 +126,8 @@ class QueryBuilder extends Object
      *
      * @throws \yii\base\InvalidConfigException
      */
-    public function build($query, $params = []) {
+    public function build($query, array $params = [])
+    {
         $result = [
             0 => [],
             1 => []

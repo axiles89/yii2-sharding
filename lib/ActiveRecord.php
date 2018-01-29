@@ -24,49 +24,56 @@ use yii\helpers\StringHelper;
 abstract class ActiveRecord extends BaseActiveRecord
 {
     /**
-     * Ïîëå ïî êîòîðîìó øàðäèì òàáëèöó
+     * ÐŸÐ¾Ð»Ðµ Ð¿Ð¾ ÐºÐ¾Ñ‚Ð¾Ñ€Ð¾Ð¼Ñƒ ÑˆÐ°Ñ€Ð´Ð¸Ð¼ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñƒ
+     * @return string
      * @throws InvalidConfigException
      */
-    public static function shardingColumn() {
+    public static function shardingColumn()
+    {
         throw new InvalidConfigException('The shardingColumn() method of sharding db ActiveRecord has to be implemented by child classes and return string.');
     }
 
     /**
-     * Òèï øàðäèíãà (òèïû çàäàþòñÿ â êîíôèãå)
+     * Ð¢Ð¸Ð¿ ÑˆÐ°Ñ€Ð´Ð¸Ð½Ð³Ð° (Ñ‚Ð¸Ð¿Ñ‹ Ð·Ð°Ð´Ð°ÑŽÑ‚ÑÑ Ð² ÐºÐ¾Ð½Ñ„Ð¸Ð³Ðµ)
      * @throws InvalidConfigException
      */
-    public static function shardingType() {
+    public static function shardingType()
+    {
         throw new InvalidConfigException('The shardingType() method of sharding db ActiveRecord has to be implemented by child classes and return string.');
     }
 
     /**
-     * @return null|object
-     * @throws InvalidConfigException
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
-    public static function getDb() {
+    public static function getDb()
+    {
         return \Yii::$app->get('sharding');
     }
 
     /**
-     * Ïîëó÷åíèå èìåíè òàáëèöû ïî óìîë÷àíèþ ('PostTag' => 'post_tag')
+     * ÐŸÐ¾Ð»ÑƒÑ‡ÐµÐ½Ð¸Ðµ Ð¸Ð¼ÐµÐ½Ð¸ Ñ‚Ð°Ð±Ð»Ð¸Ñ†Ñ‹ Ð¿Ð¾ ÑƒÐ¼Ð¾Ð»Ñ‡Ð°Ð½Ð¸ÑŽ ('PostTag' => 'post_tag')
      * @return string
      */
-    public static function tableName() {
+    public static function tableName()
+    {
         return '{{%' . Inflector::camel2id(StringHelper::basename(get_called_class()), '_') . '}}';
     }
 
     /**
      * @throws InvalidConfigException
      */
-    public static function primaryKey() {
+    public static function primaryKey()
+    {
         throw new InvalidConfigException('The primaryKey() method of sharding db ActiveRecord has to be implemented by child classes.');
     }
 
     /**
-     * @return object
-     * @throws InvalidConfigException
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
-    public static function find() {
+    public static function find()
+    {
         return \Yii::createObject(ActiveQuery::className(), [get_called_class()]);
     }
 
@@ -75,7 +82,8 @@ abstract class ActiveRecord extends BaseActiveRecord
      * @return mixed
      * @throws InvalidConfigException
      */
-    public static function getTableSchema($shardDb) {
+    public static function getTableSchema($shardDb)
+    {
         $schema = \Yii::$app->get($shardDb)->getSchema()->getTableSchema(static::tableName());
         if ($schema !== null) {
             return $schema;
@@ -85,28 +93,31 @@ abstract class ActiveRecord extends BaseActiveRecord
     }
 
     /**
-     * Ãåíåðàöèÿ óñëîâèé äëÿ ñòàòè÷åñêèõ ìåòîäîâ findOne, findAll
+     * Ð“ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ñ ÑƒÑÐ»Ð¾Ð²Ð¸Ð¹ Ð´Ð»Ñ ÑÑ‚Ð°Ñ‚Ð¸Ñ‡ÐµÑÐºÐ¸Ñ… Ð¼ÐµÑ‚Ð¾Ð´Ð¾Ð² findOne, findAll
      * @param mixed $condition
      * @return mixed
      * @throws InvalidConfigException
      */
-    protected static function findByCondition($condition) {
+    protected static function findByCondition($condition)
+    {
+        /** @var ActiveQuery $query */
         $query = static::find();
 
-        if (!ArrayHelper::isAssociative($condition)) {
-            // query by primary key
-            $primaryKey = static::primaryKey();
-
-            if (isset($primaryKey[0])) {
-                $pk = $primaryKey[0];
-                if (!empty($query->join) || !empty($query->joinWith)) {
-                    $pk = static::tableName() . '.' . $pk;
-                }
-                $condition = [$pk => $condition];
-            } else {
-                throw new InvalidConfigException('"' . get_called_class() . '" must have a primary key.');
-            }
+        if (ArrayHelper::isAssociative($condition)) {
+            return $query->andWhere($condition);
         }
+
+        /** @var array $primaryKey */
+        $primaryKey = static::primaryKey();
+        if (!is_array($primaryKey) || !array_key_exists(0, $primaryKey)) {
+            throw new InvalidConfigException('"' . get_called_class() . '" must have a primary key.');
+        }
+
+        $pk = $primaryKey[0];
+        if (!empty($query->join) || !empty($query->joinWith)) {
+            $pk = static::tableName() . '.' . $pk;
+        }
+        $condition = [$pk => $condition];
 
         return $query->andWhere($condition);
     }
@@ -115,9 +126,11 @@ abstract class ActiveRecord extends BaseActiveRecord
      * @param bool|true $runValidation
      * @param null $attributes
      * @return bool
+     * @throws \yii\base\InvalidParamException
      * @throws InvalidConfigException
      */
-    public function insert($runValidation = true, $attributes = null) {
+    public function insert($runValidation = true, $attributes = null)
+    {
         if ($runValidation && !$this->validate($attributes)) {
             \Yii::info('Model not inserted due to validation error.', __METHOD__);
             return false;
@@ -138,9 +151,9 @@ abstract class ActiveRecord extends BaseActiveRecord
             throw new InvalidConfigException('The sharding component for this Active Record model not found');
         }
 
-        // Ïîëó÷àåì íîìåð êîíêðåòíîãî øàðäà äëÿ insert íîâîé çàïèñò
+        // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð½Ð¾Ð¼ÐµÑ€ ÐºÐ¾Ð½ÐºÑ€ÐµÑ‚Ð½Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð° Ð´Ð»Ñ insert Ð½Ð¾Ð²Ð¾Ð¹ Ð·Ð°Ð¿Ð¸ÑÑ‚
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $values[static::shardingColumn()]);
 
         if (!$shardDb) {
@@ -151,14 +164,14 @@ abstract class ActiveRecord extends BaseActiveRecord
             return false;
         }
 
-        // Âñòàâëÿåì çíà÷åíèå ïåðâè÷íîãî êëþ÷à â ìîäåëü
+        // Ð’ÑÑ‚Ð°Ð²Ð»ÑÐµÐ¼ Ð·Ð½Ð°Ñ‡ÐµÐ½Ð¸Ðµ Ð¿ÐµÑ€Ð²Ð¸Ñ‡Ð½Ð¾Ð³Ð¾ ÐºÐ»ÑŽÑ‡Ð° Ð² Ð¼Ð¾Ð´ÐµÐ»ÑŒ
         foreach ($primaryKeys as $name => $value) {
             $id = $this->getTableSchema($shardDb)->columns[$name]->phpTypecast($value);
             $this->setAttribute($name, $id);
             $values[$name] = $id;
         }
 
-        // Çàïîëíÿåì old attributes
+        // Ð—Ð°Ð¿Ð¾Ð»Ð½ÑÐµÐ¼ old attributes
         $changedAttributes = array_fill_keys(array_keys($values), null);
         $this->setOldAttributes($values);
         $this->afterSave(true, $changedAttributes);
@@ -172,9 +185,10 @@ abstract class ActiveRecord extends BaseActiveRecord
      * @return bool|int
      * @throws \yii\db\StaleObjectException
      */
-    public function update($runValidation = true, $attributeNames = null) {
+    public function update($runValidation = true, $attributeNames = null)
+    {
         if ($runValidation && !$this->validate($attributeNames)) {
-            Yii::info('Model not updated due to validation error.', __METHOD__);
+            \Yii::info('Model not updated due to validation error.', __METHOD__);
             return false;
         }
 
@@ -183,31 +197,32 @@ abstract class ActiveRecord extends BaseActiveRecord
 
 
     /**
-     * Âûçûâàåòñÿ ïðè îáíîâëåíèè âñåõ ýëåìåíòîâ, à òàêæå â updateInternal ìåòîäå ïðè îáíîâëåíèè êîíêðåòíîãî ýêçåìïëÿðà ìîäåëè
+     * Ð’Ñ‹Ð·Ñ‹Ð²Ð°ÐµÑ‚ÑÑ Ð¿Ñ€Ð¸ Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ð¸ Ð²ÑÐµÑ… ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð², Ð° Ñ‚Ð°ÐºÐ¶Ðµ Ð² updateInternal Ð¼ÐµÑ‚Ð¾Ð´Ðµ Ð¿Ñ€Ð¸ Ð¾Ð±Ð½Ð¾Ð²Ð»ÐµÐ½Ð¸Ð¸ ÐºÐ¾Ð½ÐºÑ€ÐµÑ‚Ð½Ð¾Ð³Ð¾ ÑÐºÐ·ÐµÐ¼Ð¿Ð»ÑÑ€Ð° Ð¼Ð¾Ð´ÐµÐ»Ð¸
      * @param array $attributes
      * @param string $condition
      * @param array $params
      * @return mixed
      * @throws InvalidConfigException
      */
-    public static function updateAll($attributes, $condition = '', $params = []) {
+    public static function updateAll($attributes, $condition = '', $params = [])
+    {
         $db = static::getDb();
 
-        if (!isset($db->shard[static::shardingType()])) {
+        if (!array_key_exists(static::shardingType(), $db->shard)) {
             throw new InvalidConfigException('The sharding component for this Active Record model not found');
         }
 
-        // Ïîëó÷àåì íóæíûé øàðä èëè âñå øàðäû äëÿ äàííîãî òèïà ðàçäåëåíèÿ
+        // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð½ÑƒÐ¶Ð½Ñ‹Ð¹ ÑˆÐ°Ñ€Ð´ Ð¸Ð»Ð¸ Ð²ÑÐµ ÑˆÐ°Ñ€Ð´Ñ‹ Ð´Ð»Ñ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ‚Ð¸Ð¿Ð° Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ñ
         $valueKey = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $valueKey);
 
         if (!$shardDb) {
             $shardDb = $shardType['db'];
         }
 
-        // Ñòðîèì çàïðîñ äëÿ êàæäîãî øàðäà
+        // Ð¡Ñ‚Ñ€Ð¾Ð¸Ð¼ Ð·Ð°Ð¿Ñ€Ð¾Ñ Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
         $builder = static::getDb()->getQueryBuilder($shardDb);
         list($sql, $params) = $builder->update(static::tableName(), $attributes, $condition, $params);
         $command = static::getDb()->createCommand($shardDb, $sql, $params);
@@ -223,17 +238,18 @@ abstract class ActiveRecord extends BaseActiveRecord
      * @return mixed
      * @throws InvalidConfigException
      */
-    public static function updateAllCounters($counters, $condition = '', $params = []) {
+    public static function updateAllCounters($counters, $condition = '', array $params = [])
+    {
         $db = static::getDb();
 
-        if (!isset($db->shard[static::shardingType()])) {
+        if (!array_key_exists(static::shardingType(), $db->shard)) {
             throw new InvalidConfigException('The sharding component for this Active Record model not found');
         }
 
-        // Ïîëó÷àåì íóæíûé øàðä èëè âñå øàðäû äëÿ äàííîãî òèïà ðàçäåëåíèÿ
+        // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð½ÑƒÐ¶Ð½Ñ‹Ð¹ ÑˆÐ°Ñ€Ð´ Ð¸Ð»Ð¸ Ð²ÑÐµ ÑˆÐ°Ñ€Ð´Ñ‹ Ð´Ð»Ñ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ‚Ð¸Ð¿Ð° Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ñ
         $helper = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $helper);
 
         if (!$shardDb) {
@@ -247,7 +263,7 @@ abstract class ActiveRecord extends BaseActiveRecord
             $n++;
         }
 
-        // Ñòðîèì çàïðîñ äëÿ êàæäîãî øàðäà
+        // Ð¡Ñ‚Ñ€Ð¾Ð¸Ð¼ Ð·Ð°Ð¿Ñ€Ð¾Ñ Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
         $builder = static::getDb()->getQueryBuilder($shardDb);
         list($sql, $params) = $builder->update(static::tableName(), $counters, $condition, $params);
         $command = static::getDb()->createCommand($shardDb, $sql, $params);
@@ -256,30 +272,31 @@ abstract class ActiveRecord extends BaseActiveRecord
     }
 
     /**
-     * Âûçûâàåòñÿ äëÿ óäàëåíèÿ âñåõ ýëåìåíòîâ, à òàêæå ïðè âûçîâå delete ó ýêçåìïëÿðà ActiveRecord
+     * Ð’Ñ‹Ð·Ñ‹Ð²Ð°ÐµÑ‚ÑÑ Ð´Ð»Ñ ÑƒÐ´Ð°Ð»ÐµÐ½Ð¸Ñ Ð²ÑÐµÑ… ÑÐ»ÐµÐ¼ÐµÐ½Ñ‚Ð¾Ð², Ð° Ñ‚Ð°ÐºÐ¶Ðµ Ð¿Ñ€Ð¸ Ð²Ñ‹Ð·Ð¾Ð²Ðµ delete Ñƒ ÑÐºÐ·ÐµÐ¼Ð¿Ð»ÑÑ€Ð° ActiveRecord
      * @param string $condition
      * @param array $params
      * @return mixed
      * @throws InvalidConfigException
      */
-    public static function deleteAll($condition = '', $params = []) {
+    public static function deleteAll($condition = '', array $params = [])
+    {
         $db = static::getDb();
 
         if (!isset($db->shard[static::shardingType()])) {
             throw new InvalidConfigException('The sharding component for this Active Record model not found');
         }
 
-        // Ïîëó÷àåì íóæíûé øàðä èëè âñå øàðäû äëÿ äàííîãî òèïà ðàçäåëåíèÿ
+        // ÐŸÐ¾Ð»ÑƒÑ‡Ð°ÐµÐ¼ Ð½ÑƒÐ¶Ð½Ñ‹Ð¹ ÑˆÐ°Ñ€Ð´ Ð¸Ð»Ð¸ Ð²ÑÐµ ÑˆÐ°Ñ€Ð´Ñ‹ Ð´Ð»Ñ Ð´Ð°Ð½Ð½Ð¾Ð³Ð¾ Ñ‚Ð¸Ð¿Ð° Ñ€Ð°Ð·Ð´ÐµÐ»ÐµÐ½Ð¸Ñ
         $valueKey = HelperCoordinator::getInstance()->getData($condition, $params, static::shardingColumn());
         $shardType = $db->shard[static::shardingType()];
-        $coordinator = \Yii::$app->$shardType['coordinator'];
+        $coordinator = \Yii::$app->{$shardType['coordinator']};
         $shardDb = $coordinator->getShard($shardType['db'], $valueKey);
 
         if (!$shardDb) {
             $shardDb = $shardType['db'];
         }
 
-        // Ñòðîèì çàïðîñ äëÿ êàæäîãî øàðäà
+        // Ð¡Ñ‚Ñ€Ð¾Ð¸Ð¼ Ð·Ð°Ð¿Ñ€Ð¾Ñ Ð´Ð»Ñ ÐºÐ°Ð¶Ð´Ð¾Ð³Ð¾ ÑˆÐ°Ñ€Ð´Ð°
         $builder = static::getDb()->getQueryBuilder($shardDb);
         list($sql, $params) = $builder->delete(static::tableName(), $condition, $params);
         $command = static::getDb()->createCommand($shardDb, $sql, $params);
@@ -289,9 +306,11 @@ abstract class ActiveRecord extends BaseActiveRecord
 
 
     /**
-     * @throws InvalidConfigException
+     * @inheritdoc
+     * @throws \yii\base\InvalidConfigException
      */
-    public function attributes() {
+    public function attributes()
+    {
         throw new InvalidConfigException('The attributes() method of sharding db ActiveRecord has to be implemented by child classes.');
     }
 
